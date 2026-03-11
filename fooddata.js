@@ -75,6 +75,10 @@ const FOOD_DATABASE = [
   // ── RICE & GRAINS ──
   { id:'white-rice', name:'Cooked White Rice', category:'Grains & Bakery', type:'veg', unit:'g',
     per100:{ calories:130, protein:2.7, carbs:28.2, fat:0.3 }, defaultQty:180 },
+  { id:'sona-masoori-rice', name:'Sona Masoori Rice (cooked)', category:'Grains & Bakery', type:'veg', unit:'g',
+    per100:{ calories:130, protein:2.5, carbs:28.0, fat:0.3 }, defaultQty:180 },
+  { id:'basmati-rice', name:'Basmati Rice (cooked)', category:'Grains & Bakery', type:'veg', unit:'g',
+    per100:{ calories:121, protein:3.5, carbs:25.2, fat:0.4 }, defaultQty:180 },
   { id:'brown-rice', name:'Brown Rice (cooked)', category:'Grains & Bakery', type:'veg', unit:'g',
     per100:{ calories:111, protein:2.6, carbs:23.0, fat:0.9 }, defaultQty:180 },
   { id:'quinoa', name:'Quinoa (cooked)', category:'Grains & Bakery', type:'veg', unit:'g',
