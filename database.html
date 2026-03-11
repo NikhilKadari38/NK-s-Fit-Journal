@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Food Database — NK's Fit Journal</title>
+  <link rel="stylesheet" href="main.css"/>
+  <link rel="stylesheet" href="components.css"/>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="site-wrapper">
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="nav-brand"><div class="nav-logo">NK</div><span class="nav-brand-name"><span>NK's</span> Fit Journal</span></a>
+      <ul class="nav-links">
+        <li><a href="index.html" class="nav-link">🏠 Home</a></li>
+        <li><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
+        <li><a href="foodlog.html" class="nav-link">🍽️ Food Log</a></li>
+        <li><a href="database.html" class="nav-link">🗄️ Database</a></li>
+        <li><a href="progress.html" class="nav-link">📈 Progress</a></li>
+        <li><a href="profile.html" class="nav-link">👤 Profile</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="theme-toggle"><div class="theme-toggle-track"><div class="theme-toggle-thumb"><span class="theme-toggle-sun">☀️</span><span class="theme-toggle-moon">🌙</span></div></div></button>
+        <button class="btn-logout" onclick="Auth.logout()" title="Logout">🚪 Logout</button>
+        <button class="nav-hamburger" id="nav-hamburger"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </nav>
+  <div class="nav-mobile" id="nav-mobile">
+    <ul class="nav-links">
+      <li><a href="index.html" class="nav-link">🏠 Home</a></li>
+      <li><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
+      <li><a href="foodlog.html" class="nav-link">🍽️ Food Log</a></li>
+      <li><a href="database.html" class="nav-link active">🗄️ Database</a></li>
+      <li><a href="progress.html" class="nav-link">📈 Progress</a></li>
+      <li><a href="profile.html" class="nav-link">👤 Profile</a></li>
+    </ul>
+  </div>
+
+  <main>
+    <div class="container">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Food Database</h1>
+          <p class="page-subtitle"><span id="results-count"></span> — click any card to quick-log</p>
+        </div>
+        <button class="btn btn-primary" id="add-custom-btn">➕ Add Custom Food</button>
+      </div>
+
+      <!-- Stats row -->
+      <div class="grid-4 mb-24 stagger-children">
+        <div class="stat-card anim-fade-in"><div class="stat-label">Total Foods</div><div class="stat-value" id="db-total">--</div></div>
+        <div class="stat-card anim-fade-in"><div class="stat-label">🌱 Vegetarian</div><div class="stat-value" id="db-veg" style="color:var(--veg-color)">--</div></div>
+        <div class="stat-card anim-fade-in"><div class="stat-label">🍗 Non-Veg</div><div class="stat-value" id="db-nonveg" style="color:var(--nonveg-color)">--</div></div>
+        <div class="stat-card anim-fade-in"><div class="stat-label">✏️ Custom</div><div class="stat-value" id="db-custom" style="color:var(--accent-primary)">--</div></div>
+      </div>
+
+      <!-- Search & Filter -->
+      <div class="card mb-24">
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+          <div class="search-wrap" style="flex:1;min-width:220px">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="db-search" class="search-input" placeholder="Search by name or category..."/>
+          </div>
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-db-filter="all">All</button>
+            <button class="filter-tab" data-db-filter="veg">🌱 Veg</button>
+            <button class="filter-tab" data-db-filter="nonveg">🍗 Non-Veg</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Foods Grid -->
+      <div class="grid-3 stagger-children" id="foods-grid" style="align-items:start"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Quick Log Modal -->
+<div class="modal-overlay" id="quick-log-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="ql-food-name">Food Name</h3>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Quantity</label>
+      <div style="display:flex;gap:10px;align-items:center">
+        <input type="number" id="ql-qty" class="form-input" min="1" max="2000" step="1" style="flex:1"/>
+        <span class="qty-unit" id="ql-unit">g</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px">
+      <div style="text-align:center;padding:10px;background:var(--bg-secondary);border-radius:10px">
+        <div style="font-size:1.2rem;font-weight:700;color:var(--accent-primary);font-family:var(--heading-font)" id="ql-calories">0</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">Calories</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:var(--bg-secondary);border-radius:10px">
+        <div style="font-size:1.2rem;font-weight:700;color:#3B82F6;font-family:var(--heading-font)" id="ql-protein">0</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">Protein g</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:var(--bg-secondary);border-radius:10px">
+        <div style="font-size:1.2rem;font-weight:700;color:#A78BFA;font-family:var(--heading-font)" id="ql-carbs">0</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">Carbs g</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:var(--bg-secondary);border-radius:10px">
+        <div style="font-size:1.2rem;font-weight:700;color:#FB923C;font-family:var(--heading-font)" id="ql-fat">0</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">Fat g</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-secondary w-full" onclick="Modal.close('quick-log-modal')">Cancel</button>
+      <button class="btn btn-primary w-full" id="ql-log-btn">✅ Log for Today</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Custom Food Modal -->
+<div class="modal-overlay" id="add-custom-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">➕ Add Custom Food</h3>
+      <button class="modal-close">✕</button>
+    </div>
+    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:20px">All values are per 100g or 100ml</p>
+    <div class="form-group">
+      <label class="form-label">Food Name *</label>
+      <input type="text" id="c-name" class="form-input" placeholder="e.g. Idli, Upma, etc."/>
+    </div>
+    <div class="input-row">
+      <div class="form-group">
+        <label class="form-label">Type *</label>
+        <select id="c-type" class="form-select">
+          <option value="veg">🌱 Vegetarian</option>
+          <option value="nonveg">🍗 Non-Vegetarian</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Unit</label>
+        <select id="c-unit" class="form-select">
+          <option value="g">Grams (g)</option>
+          <option value="ml">Millilitres (ml)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <input type="text" id="c-category" class="form-input" placeholder="e.g. Grains, Snacks, Dairy..."/>
+    </div>
+    <div class="input-row">
+      <div class="form-group">
+        <label class="form-label">Calories (kcal) *</label>
+        <input type="number" id="c-calories" class="form-input" min="0" step="0.1" placeholder="per 100g"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Protein (g) *</label>
+        <input type="number" id="c-protein" class="form-input" min="0" step="0.1" placeholder="per 100g"/>
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="form-group">
+        <label class="form-label">Carbs (g) *</label>
+        <input type="number" id="c-carbs" class="form-input" min="0" step="0.1" placeholder="per 100g"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fat (g) *</label>
+        <input type="number" id="c-fat" class="form-input" min="0" step="0.1" placeholder="per 100g"/>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-secondary w-full" onclick="Modal.close('add-custom-modal')">Cancel</button>
+      <button class="btn btn-primary w-full" id="save-custom-btn">💾 Save to Database</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+  <script src="auth.js"></script>
+<script src="app.js"></script>
+<script src="animations.js"></script>
+<script src="fooddata.js"></script>
+<script src="database.js"></script>
+
+<script>
+// Auth guard
+(function() {
+  const user = Auth.requireAuth();
+  if (!user) return;
+  // Show username in navbar
+  const el = document.createElement('span');
+  el.style.cssText = 'font-size:0.82rem;color:var(--text-muted);font-weight:600;padding:0 8px';
+  el.textContent = '👤 ' + user;
+  const actions = document.querySelector('.nav-actions');
+  if (actions) actions.insertBefore(el, actions.firstChild);
+})();
+</script>
+</body>
+</html>
