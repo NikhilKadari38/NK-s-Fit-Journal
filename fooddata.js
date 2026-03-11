@@ -118,7 +118,7 @@ const FOOD_DATABASE = [
   { id:'edamame', name:'Edamame', category:'Dals & Legumes', type:'veg', unit:'g',
     per100:{ calories:121, protein:11.9, carbs:8.9, fat:5.2 }, defaultQty:100 },
   { id:'tofu-firm', name:'Tofu (firm)', category:'Dals & Legumes', type:'veg', unit:'g',
-    per100:{ calories:76, protein:8.0, carbs:1.9, fat:4.8 }, defaultQty:100 },
+    per100:{ calories:76, protein:15.4, carbs:1.9, fat:4.8 }, defaultQty:100 },
   { id:'soya-chunks', name:'Soya Chunks (dry)', category:'Dals & Legumes', type:'veg', unit:'g',
     per100:{ calories:345, protein:52.4, carbs:33.0, fat:0.5 }, defaultQty:30 },
 
