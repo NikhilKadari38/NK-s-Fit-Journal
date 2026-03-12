@@ -24,6 +24,27 @@ const FoodDatabase = (() => {
     if (vegEl) vegEl.textContent = all.filter(f=>f.type==='veg').length;
     if (nonvegEl) nonvegEl.textContent = all.filter(f=>f.type==='nonveg').length;
     if (customEl) customEl.textContent = NKStorage.getCustomFoods().length;
+    // Sync active state on stat cards
+    syncStatCardActive();
+  };
+
+  const syncStatCardActive = () => {
+    document.querySelectorAll('.stat-filter-card').forEach(card => {
+      card.classList.toggle('active-filter', card.dataset.statFilter === currentFilter);
+    });
+    // Sync filter tabs too
+    document.querySelectorAll('[data-db-filter]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.dbFilter === currentFilter);
+    });
+  };
+
+  const applyFilter = (filter) => {
+    currentFilter = filter;
+    renderFoods();
+    syncStatCardActive();
+    // Scroll to foods grid smoothly
+    const grid = document.getElementById('foods-grid');
+    if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const renderFoods = () => {
@@ -151,12 +172,91 @@ const FoodDatabase = (() => {
   };
 
   const bindFilters = () => {
+    // Filter tab buttons
     document.querySelectorAll('[data-db-filter]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        currentFilter = btn.dataset.dbFilter;
-        document.querySelectorAll('[data-db-filter]').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderFoods();
+      btn.addEventListener('click', () => applyFilter(btn.dataset.dbFilter));
+    });
+    // Stat card filter buttons
+    document.querySelectorAll('.stat-filter-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const filter = card.dataset.statFilter;
+        // 'custom' filter — show only custom foods
+        if (filter === 'custom') {
+          currentFilter = 'all';
+          searchQuery = '';
+          const searchEl = document.getElementById('db-search');
+          if (searchEl) searchEl.value = '';
+          renderFoodsCustomOnly();
+          syncStatCardActive();
+          const grid = document.getElementById('foods-grid');
+          if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          applyFilter(filter);
+        }
+      });
+    });
+  };
+
+  const renderFoodsCustomOnly = () => {
+    const foods = NKStorage.getCustomFoods();
+    const container = document.getElementById('foods-grid');
+    const countEl = document.getElementById('results-count');
+    if (countEl) countEl.textContent = foods.length + ' custom items';
+    if (!container) return;
+    if (foods.length === 0) {
+      container.innerHTML = \`<div class="empty-state" style="grid-column:1/-1">
+        <span class="empty-state-icon">✏️</span>
+        <div class="empty-state-title">No custom foods yet</div>
+        <div class="empty-state-desc">Click "Add Custom Food" to add your own items</div>
+      </div>\`;
+      return;
+    }
+    // Reuse renderFoods logic but only for custom foods
+    const grouped = { 'My Custom Foods': foods };
+    container.innerHTML = Object.entries(grouped).map(([cat, items]) => \`
+      <div class="db-category-section" style="grid-column:1/-1; margin-bottom:8px">
+        <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px">
+          <span>✏️ \${cat}</span>
+          <span style="background:var(--border-color);padding:2px 8px;border-radius:999px;font-size:0.7rem">\${items.length}</span>
+        </div>
+        <div class="grid-3" style="gap:12px">
+          \${items.map(food => \`
+            <div class="food-db-card card card-sm" data-food-id="\${food.id}" style="cursor:pointer;transition:all 0.2s">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <span style="font-size:0.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase">\${food.type==='nonveg'?'Non-Veg':'Veg'}</span>
+                <span class="pill" style="font-size:0.65rem;padding:2px 8px;background:rgba(0,122,204,0.1);color:var(--accent-primary)">Custom</span>
+              </div>
+              <div style="font-weight:600;font-size:0.92rem;margin-bottom:8px">\${food.name}</div>
+              <div style="font-family:var(--heading-font);font-size:1.5rem;font-weight:700;color:var(--accent-primary)">\${food.per100.calories}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted)">kcal / 100\${food.unit}</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color)">
+                <div style="text-align:center"><div style="font-weight:700;font-size:0.85rem;color:#3B82F6">\${food.per100.protein}g</div><div style="font-size:0.62rem;color:var(--text-muted)">Protein</div></div>
+                <div style="text-align:center;border-left:1px solid var(--border-color);border-right:1px solid var(--border-color)"><div style="font-weight:700;font-size:0.85rem;color:#A78BFA">\${food.per100.carbs}g</div><div style="font-size:0.62rem;color:var(--text-muted)">Carbs</div></div>
+                <div style="text-align:center"><div style="font-weight:700;font-size:0.85rem;color:#FB923C">\${food.per100.fat}g</div><div style="font-size:0.62rem;color:var(--text-muted)">Fat</div></div>
+              </div>
+              <button class="btn btn-danger btn-sm w-full delete-custom" data-id="\${food.id}" style="margin-top:10px">🗑️ Delete</button>
+            </div>
+          \`).join('')}
+        </div>
+      </div>
+    \`).join('');
+
+    container.querySelectorAll('.food-db-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.delete-custom')) return;
+        const food = FoodDB.getById(card.dataset.foodId);
+        if (food) openQuickLog(food);
+      });
+    });
+    container.querySelectorAll('.delete-custom').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (confirm('Delete this custom food?')) {
+          NKStorage.deleteCustomFood(btn.dataset.id);
+          renderStats();
+          renderFoodsCustomOnly();
+          Toast.info('Custom food deleted');
+        }
       });
     });
   };
