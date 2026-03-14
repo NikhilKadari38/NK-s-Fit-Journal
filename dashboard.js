@@ -4,8 +4,35 @@
 // ============================================
 
 const Dashboard = (() => {
-  const PROFILE = { startWeight: 76, goalWeight: 65, caloriesRest: 1462, caloriesWorkout: 2034, waterGoalMl: 3000 };
+  // Fallback defaults — only used if user hasn't set up profile yet
+  const DEFAULTS = {
+    weight: 76, goalWeight: 65, goalType: 'lose',
+    caloriesRest: 1462, caloriesWorkout: 2034,
+    waterGoalMl: 3000,
+    protein: 136, carbsRest: 138, carbsWorkout: 246,
+    fatRest: 41, fatWorkout: 56
+  };
+
   let today, isWorkout, todayLog, waterMl;
+
+  // Always read fresh from profile — never use stale hardcoded values
+  const getP = () => {
+    const p = NKStorage.getProfile() || {};
+    return {
+      weight:         p.weight         || DEFAULTS.weight,
+      goalWeight:     p.goalWeight     || DEFAULTS.goalWeight,
+      goalType:       p.goalType       || DEFAULTS.goalType,
+      caloriesRest:   p.caloriesRest   || DEFAULTS.caloriesRest,
+      caloriesWorkout:p.caloriesWorkout|| DEFAULTS.caloriesWorkout,
+      waterGoal:      p.waterGoal      || DEFAULTS.waterGoalMl,
+      // Macros — derived from calories if not set, or use defaults
+      protein:        DEFAULTS.protein,
+      carbsRest:      DEFAULTS.carbsRest,
+      carbsWorkout:   DEFAULTS.carbsWorkout,
+      fatRest:        DEFAULTS.fatRest,
+      fatWorkout:     DEFAULTS.fatWorkout,
+    };
+  };
 
   const init = () => {
     today = Utils.today();
@@ -30,85 +57,118 @@ const Dashboard = (() => {
   };
 
   const renderWorkoutToggle = () => {
+    const p = getP();
     const btn = document.getElementById('workout-toggle-btn');
     const label = document.getElementById('workout-toggle-label');
-    const goalType2 = (NKStorage.getProfile() || {}).goalType || 'lose';
     const calLabel = document.getElementById('cal-goal-label');
     if (!btn) return;
-    btn.className = `toggle-btn ${isWorkout ? 'active' : ''}`;
+    btn.className = 'toggle-btn ' + (isWorkout ? 'active' : '');
     if (label) label.textContent = isWorkout ? '🏋️ Workout Day' : '😴 Rest Day';
-    if (calLabel) calLabel.textContent = isWorkout ? '2,034' : '1,462';
-    btn.addEventListener('click', () => {
+    if (calLabel) calLabel.textContent = isWorkout
+      ? p.caloriesWorkout.toLocaleString()
+      : p.caloriesRest.toLocaleString();
+    btn.onclick = () => {
       isWorkout = NKStorage.toggleWorkoutDay(today);
       renderWorkoutToggle();
       renderSummary();
-    });
+    };
   };
 
   const getTotals = () => {
-    return todayLog.reduce((acc, entry) => {
+    return todayLog.reduce(function(acc, entry) {
       acc.calories += entry.calories || 0;
-      acc.protein += entry.protein || 0;
-      acc.carbs += entry.carbs || 0;
-      acc.fat += entry.fat || 0;
+      acc.protein  += entry.protein  || 0;
+      acc.carbs    += entry.carbs    || 0;
+      acc.fat      += entry.fat      || 0;
       return acc;
     }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
   };
 
   const renderSummary = () => {
+    const p = getP();
     const totals = getTotals();
-    const goal = isWorkout ? PROFILE.caloriesWorkout : PROFILE.caloriesRest;
-    const goalType3 = (NKStorage.getProfile() || {}).goalType || 'lose';
-    const remaining = Math.abs(goal - totals.calories);
+    const goal = isWorkout ? p.caloriesWorkout : p.caloriesRest;
     const eaten = Utils.round1(totals.calories);
+    const diff = Math.round(Math.abs(goal - totals.calories));
+    const over = totals.calories > goal;
 
     // Calories eaten
     const eatenEl = document.getElementById('cal-eaten');
     if (eatenEl) eatenEl.textContent = Math.round(eaten);
 
-    // Remaining
+    // Calorie goal label
+    const calLabel = document.getElementById('cal-goal-label');
+    if (calLabel) calLabel.textContent = goal.toLocaleString();
+
+    // Remaining / needed label — changes based on goal type
     const remEl = document.getElementById('cal-remaining');
+    const ringGoalEl = document.querySelector('.ring-goal');
     if (remEl) {
-      remEl.textContent = Math.round(remaining);
-      remEl.style.color = remaining <= 0 ? 'var(--error)' : '';
+      remEl.textContent = diff;
+      if (p.goalType === 'gain') {
+        // For gain: going over is GOOD (green), under is normal
+        remEl.style.color = over ? 'var(--success)' : '';
+      } else {
+        // For lose/maintain: going over is BAD (red)
+        remEl.style.color = over ? 'var(--error)' : '';
+      }
+    }
+
+    // Update the label text next to remaining
+    if (ringGoalEl) {
+      let remLabel = '';
+      if (p.goalType === 'gain') {
+        remLabel = over ? 'Over target: ' : 'Still to eat: ';
+      } else {
+        remLabel = over ? 'Over by: ' : 'Remaining: ';
+      }
+      ringGoalEl.innerHTML = 'Goal: <span id="cal-goal-label">' + goal.toLocaleString() + '</span> kcal &nbsp;|&nbsp; '
+        + remLabel + '<span id="cal-remaining" style="color:' + (p.goalType === 'gain' ? (over ? 'var(--success)' : '') : (over ? 'var(--error)' : '')) + '">' + diff + '</span> kcal';
     }
 
     // Calorie ring
     MacroUI.drawRing('macro-canvas', eaten, goal, totals.protein, totals.carbs, totals.fat);
 
-    // Macro bars
-    const macroGoals = { protein: 136, carbs: isWorkout ? 246 : 138, fat: isWorkout ? 56 : 41 };
-    ['protein','carbs','fat'].forEach(m => {
-      const bar = document.getElementById(`bar-${m}`);
-      const val = document.getElementById(`val-${m}`);
+    // Daily calorie goal stat card
+    const calGoalStat = document.getElementById('cal-goal-stat');
+    if (calGoalStat) calGoalStat.innerHTML = goal.toLocaleString() + '<span class="stat-unit">kcal</span>';
+
+    // Macro bars — use profile macros
+    const macroGoals = {
+      protein: p.protein,
+      carbs:   isWorkout ? p.carbsWorkout : p.carbsRest,
+      fat:     isWorkout ? p.fatWorkout   : p.fatRest
+    };
+    ['protein', 'carbs', 'fat'].forEach(function(m) {
+      const bar = document.getElementById('bar-' + m);
+      const val = document.getElementById('val-' + m);
       const pct = Math.min((totals[m] / macroGoals[m]) * 100, 100);
       if (bar) bar.style.width = pct + '%';
       if (val) val.textContent = Utils.round1(totals[m]) + 'g / ' + macroGoals[m] + 'g';
     });
 
     // Macro display values
-    document.querySelectorAll('[data-macro]').forEach(el => {
+    document.querySelectorAll('[data-macro]').forEach(function(el) {
       const m = el.dataset.macro;
       if (totals[m] !== undefined) el.textContent = Utils.round1(totals[m]) + 'g';
     });
   };
 
   const renderGoalProgress = () => {
-    const profile = NKStorage.getProfile() || {};
-    const startWeight = profile.weight || PROFILE.startWeight;
-    const goalWeight = profile.goalWeight || PROFILE.goalWeight;
-    const goalType = profile.goalType || (startWeight > goalWeight ? 'lose' : startWeight < goalWeight ? 'gain' : 'maintain');
+    const p = getP();
+    const goalType = p.goalType;
 
-    // Get latest logged weight if available
+    // Get latest logged weight
     const allWeights = NKStorage.getAllWeights();
     const currentWeight = allWeights.length > 0
       ? allWeights[allWeights.length - 1].weight
-      : startWeight;
+      : p.weight;
+    const startWeight = p.weight;
+    const goalWeight  = p.goalWeight;
 
     const totalDiff = Math.abs(startWeight - goalWeight);
-    const changed = Utils.round1(Math.abs(startWeight - currentWeight));
+    const changed = Utils.round1(Math.abs(currentWeight - startWeight));
 
-    // Progress % — how much of the gap has been closed
     let pct = 0;
     if (totalDiff > 0) {
       if (goalType === 'lose') {
@@ -116,54 +176,57 @@ const Dashboard = (() => {
       } else if (goalType === 'gain') {
         pct = Utils.clamp(Math.round(((currentWeight - startWeight) / totalDiff) * 100), 0, 100);
       } else {
-        pct = 100; // maintain = already there
+        pct = 100;
       }
     }
 
-    const bar = document.getElementById('goal-bar');
-    const pctEl = document.getElementById('goal-pct');
+    const bar      = document.getElementById('goal-bar');
+    const pctEl    = document.getElementById('goal-pct');
     const currWtEl = document.getElementById('current-weight');
-    const changedEl = document.getElementById('weight-changed');
+    const changedEl= document.getElementById('weight-changed');
     const targetEl = document.getElementById('goal-target-weight');
-    const labelEl = document.getElementById('goal-progress-label');
+    const labelEl  = document.getElementById('goal-progress-label');
 
-    if (bar) bar.style.width = pct + '%';
-    if (pctEl) pctEl.textContent = pct + '% complete';
+    if (bar)      bar.style.width = pct + '%';
+    if (pctEl)    pctEl.textContent = pct + '% complete';
     if (currWtEl) currWtEl.textContent = currentWeight + ' kg';
     if (targetEl) targetEl.textContent = goalWeight + ' kg';
+
     if (changedEl) {
-      if (goalType === 'lose') changedEl.textContent = changed + ' kg lost';
-      else if (goalType === 'gain') changedEl.textContent = changed + ' kg gained';
-      else changedEl.textContent = '⚖️ Maintaining';
+      if      (goalType === 'lose')     changedEl.textContent = changed + ' kg lost';
+      else if (goalType === 'gain')     changedEl.textContent = changed + ' kg gained';
+      else                              changedEl.textContent = '⚖️ Maintaining';
     }
     if (labelEl) {
-      if (goalType === 'lose') labelEl.textContent = '📉 Weight Loss Progress';
-      else if (goalType === 'gain') labelEl.textContent = '📈 Weight Gain Progress';
-      else labelEl.textContent = '⚖️ Weight Maintenance';
+      if      (goalType === 'lose')     labelEl.textContent = '📉 Weight Loss Progress';
+      else if (goalType === 'gain')     labelEl.textContent = '📈 Weight Gain Progress';
+      else                              labelEl.textContent = '⚖️ Weight Maintenance';
     }
   };
 
   const renderWater = () => {
-    const pct = waterMl / PROFILE.waterGoalMl;
+    const p = getP();
+    const waterGoal = p.waterGoal;
+    const pct = waterMl / waterGoal;
     WaterGlass.draw('water-glass-svg', pct);
-    const mlEl = document.getElementById('water-ml');
-    const targetEl = document.getElementById('water-target');
-    if (mlEl) mlEl.textContent = waterMl + ' ml';
-    if (targetEl) targetEl.textContent = 'Goal: ' + PROFILE.waterGoalMl + ' ml';
 
-    // Add water buttons
-    document.querySelectorAll('[data-water-add]').forEach(btn => {
-      btn.onclick = () => {
+    const mlEl     = document.getElementById('water-ml');
+    const targetEl = document.getElementById('water-target');
+    if (mlEl)     mlEl.textContent    = waterMl + ' ml';
+    if (targetEl) targetEl.textContent = 'Goal: ' + waterGoal + ' ml';
+
+    document.querySelectorAll('[data-water-add]').forEach(function(btn) {
+      btn.onclick = function() {
         const add = parseInt(btn.dataset.waterAdd);
-        waterMl = Math.min(waterMl + add, PROFILE.waterGoalMl);
+        waterMl = Math.min(waterMl + add, waterGoal);
         NKStorage.setWater(today, waterMl);
         renderWater();
-        if (waterMl >= PROFILE.waterGoalMl) Toast.success('🎉 Water goal achieved!');
+        if (waterMl >= waterGoal) Toast.success('🎉 Water goal achieved!');
       };
     });
 
     const resetBtn = document.getElementById('water-reset');
-    if (resetBtn) resetBtn.onclick = () => {
+    if (resetBtn) resetBtn.onclick = function() {
       waterMl = 0; NKStorage.setWater(today, 0); renderWater();
     };
   };
@@ -174,36 +237,36 @@ const Dashboard = (() => {
     if (!container) return;
 
     if (todayLog.length === 0) {
-      container.innerHTML = `<div class="empty-state">
-        <span class="empty-state-icon">🍽️</span>
-        <div class="empty-state-title">No food logged yet today</div>
-        <div class="empty-state-desc">Head to <a href="foodlog.html">Food Log</a> to add meals</div>
-      </div>`;
+      container.innerHTML = '<div class="empty-state">'
+        + '<span class="empty-state-icon">🍽️</span>'
+        + '<div class="empty-state-title">No food logged yet today</div>'
+        + '<div class="empty-state-desc">Head to <a href="foodlog.html">Food Log</a> to add meals</div>'
+        + '</div>';
       return;
     }
 
-    container.innerHTML = todayLog.slice(-5).reverse().map(entry => `
-      <div class="log-entry anim-fade-in">
-        <span class="${entry.type === 'nonveg' ? 'nonveg-dot' : 'veg-dot'}"></span>
-        <div style="flex:1">
-          <div class="log-entry-name">${entry.name}</div>
-          <div class="log-entry-qty">${entry.qty}${entry.unit} · P:${entry.protein}g C:${entry.carbs}g F:${entry.fat}g</div>
-        </div>
-        <div>
-          <div class="log-entry-cal">${Math.round(entry.calories)} <span>kcal</span></div>
-          <div class="log-entry-time">${Utils.formatTime(entry.addedAt)}</div>
-        </div>
-      </div>
-    `).join('');
+    container.innerHTML = todayLog.slice(-5).reverse().map(function(entry) {
+      return '<div class="log-entry anim-fade-in">'
+        + '<span class="' + (entry.type === 'nonveg' ? 'nonveg-dot' : 'veg-dot') + '"></span>'
+        + '<div style="flex:1">'
+        + '<div class="log-entry-name">' + entry.name + '</div>'
+        + '<div class="log-entry-qty">' + entry.qty + entry.unit + ' · P:' + entry.protein + 'g C:' + entry.carbs + 'g F:' + entry.fat + 'g</div>'
+        + '</div>'
+        + '<div>'
+        + '<div class="log-entry-cal">' + Math.round(entry.calories) + ' <span>kcal</span></div>'
+        + '<div class="log-entry-time">' + Utils.formatTime(entry.addedAt) + '</div>'
+        + '</div>'
+        + '</div>';
+    }).join('');
   };
 
   const renderWeightInput = () => {
     const saved = NKStorage.getWeight(today);
     const input = document.getElementById('weight-input');
-    const btn = document.getElementById('weight-save-btn');
+    const btn   = document.getElementById('weight-save-btn');
     if (input && saved) input.value = saved.kg;
-    if (btn) btn.onclick = () => {
-      const val = parseFloat(input?.value);
+    if (btn) btn.onclick = function() {
+      const val = parseFloat(input ? input.value : 0);
       if (!val || val < 20 || val > 300) { Toast.error('Please enter a valid weight (20–300 kg)'); return; }
       const profile = NKStorage.getProfile() || {};
       profile.weight = val;
@@ -214,10 +277,10 @@ const Dashboard = (() => {
     };
   };
 
-  return { init };
+  return { init: init };
 })();
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', async function() {
   BGAnim.init('dashboard');
   await syncFromCloud();
   Dashboard.init();
