@@ -119,32 +119,32 @@
               <div class="ring-container">
                 <canvas id="macro-canvas" width="200" height="200"></canvas>
                 <div class="ring-center">
-                  <div class="ring-cal" id="cal-eaten">0</div>
+                  <div class="ring-cal" id="cal-eaten"></div>
                   <div class="ring-label">kcal eaten</div>
                 </div>
               </div>
-              <div class="ring-goal">Goal: <span id="cal-goal-label">--</span> kcal &nbsp;|&nbsp; Remaining: <span id="cal-remaining">--</span> kcal</div>
+              <div class="ring-goal">Goal: <span id="cal-goal-label"></span> &nbsp;|&nbsp; <span id="cal-remaining"></span></div>
             </div>
             <!-- Macro Bars -->
             <div class="macro-section" style="border-top:1px solid var(--border-color);padding-top:20px">
               <div class="macro-item">
                 <div class="macro-header">
                   <span class="macro-name macro-protein">💪 Protein</span>
-                  <span class="macro-gram" id="val-protein" style="color:#3B82F6">0g / 136g</span>
+                  <span class="macro-gram" id="val-protein" style="color:#3B82F6"></span>
                 </div>
                 <div class="progress-wrap" style="height:8px"><div class="progress-bar dot-protein" id="bar-protein" style="width:0;height:100%"></div></div>
               </div>
               <div class="macro-item">
                 <div class="macro-header">
                   <span class="macro-name macro-carbs">⚡ Carbs</span>
-                  <span class="macro-gram" id="val-carbs" style="color:#A78BFA">0g / 138g</span>
+                  <span class="macro-gram" id="val-carbs" style="color:#A78BFA"></span>
                 </div>
                 <div class="progress-wrap" style="height:8px"><div class="progress-bar dot-carbs" id="bar-carbs" style="width:0;height:100%"></div></div>
               </div>
               <div class="macro-item" style="margin-bottom:0">
                 <div class="macro-header">
                   <span class="macro-name macro-fat">🔥 Fat</span>
-                  <span class="macro-gram" id="val-fat" style="color:#FB923C">0g / 41g</span>
+                  <span class="macro-gram" id="val-fat" style="color:#FB923C"></span>
                 </div>
                 <div class="progress-wrap" style="height:8px"><div class="progress-bar dot-fat" id="bar-fat" style="width:0;height:100%"></div></div>
               </div>
@@ -155,14 +155,14 @@
           <div class="goal-progress-wrap anim-fade-in">
             <div class="goal-row">
               <span class="goal-label" id="goal-progress-label">🎯 Weight Goal Progress</span>
-              <span class="goal-pct" id="goal-pct">0% complete</span>
+              <span class="goal-pct" id="goal-pct"></span>
             </div>
             <div class="d-flex justify-between align-center mb-8">
-              <span style="font-size:0.82rem;color:var(--text-muted)" id="weight-changed">-- kg</span>
+              <span style="font-size:0.82rem;color:var(--text-muted)" id="weight-changed"></span>
               <div class="goal-weights">
-                <span class="goal-current" id="current-weight">-- kg</span>
+                <span class="goal-current" id="current-weight"></span>
                 <span class="goal-arrow"> → </span>
-                <span class="goal-target" id="goal-target-weight">-- kg</span>
+                <span class="goal-target" id="goal-target-weight"></span>
               </div>
             </div>
             <div class="progress-wrap goal-bar-wrap" style="height:12px">
@@ -187,19 +187,19 @@
           <div class="grid-2 stagger-children" style="gap:12px">
             <div class="stat-card anim-fade-in">
               <div class="stat-label">Protein</div>
-              <div class="stat-value macro-protein" data-macro="protein">0<span class="stat-unit">g</span></div>
+              <div class="stat-value macro-protein" data-macro="protein"><span class="stat-unit">g</span></div>
             </div>
             <div class="stat-card anim-fade-in">
               <div class="stat-label">Carbs</div>
-              <div class="stat-value macro-carbs" data-macro="carbs">0<span class="stat-unit">g</span></div>
+              <div class="stat-value macro-carbs" data-macro="carbs"><span class="stat-unit">g</span></div>
             </div>
             <div class="stat-card anim-fade-in">
               <div class="stat-label">Fat</div>
-              <div class="stat-value macro-fat" data-macro="fat">0<span class="stat-unit">g</span></div>
+              <div class="stat-value macro-fat" data-macro="fat"><span class="stat-unit">g</span></div>
             </div>
             <div class="stat-card anim-fade-in">
               <div class="stat-label">Goal</div>
-              <div class="stat-value" style="font-size:1.2rem;color:var(--accent-primary)" id="cal-goal-stat">--<span class="stat-unit">kcal</span></div>
+              <div class="stat-value" style="font-size:1.2rem;color:var(--accent-primary)" id="cal-goal-stat"><span class="stat-unit"></span></div>
             </div>
           </div>
 
@@ -212,8 +212,8 @@
             <div class="water-glass-wrap">
               <svg id="water-glass-svg" class="water-glass-svg" viewBox="0 0 60 96" width="60" height="96"></svg>
               <div class="water-glass-info">
-                <div class="water-glass-ml" id="water-ml">0 ml</div>
-                <div class="water-glass-target" id="water-target">Goal: 3000 ml</div>
+                <div class="water-glass-ml" id="water-ml"></div>
+                <div class="water-glass-target" id="water-target"></div>
                 <div class="water-glass-btns">
                   <button class="water-add-btn" data-water-add="250">+250ml</button>
                   <button class="water-add-btn" data-water-add="500">+500ml</button>
