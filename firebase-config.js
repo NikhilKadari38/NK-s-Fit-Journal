@@ -189,15 +189,26 @@ const NKStorage = {
   updateSettings: (patch) => {
     NKStorage.setSettings({ ...NKStorage.getSettings(), ...patch });
   },
-  isWorkoutDay: (date) => (NKStorage.getSettings().workoutDays || []).includes(date),
-  toggleWorkoutDay: (date) => {
+  // Day type: 'rest' | 'moderate' | 'full'
+  getDayType: (date) => {
     const settings = NKStorage.getSettings();
-    const days = settings.workoutDays || [];
-    const idx = days.indexOf(date);
-    if (idx >= 0) days.splice(idx, 1); else days.push(date);
-    NKStorage.updateSettings({ workoutDays: days });
-    return idx < 0;
-  }
+    return (settings.dayTypes || {})[date] || 'rest';
+  },
+  setDayType: (date, type) => {
+    const settings = NKStorage.getSettings();
+    const dayTypes = settings.dayTypes || {};
+    dayTypes[date] = type;
+    NKStorage.updateSettings({ dayTypes: dayTypes });
+    return type;
+  },
+  cycleDayType: (date) => {
+    const current = NKStorage.getDayType(date);
+    const next = current === 'rest' ? 'moderate' : current === 'moderate' ? 'full' : 'rest';
+    return NKStorage.setDayType(date, next);
+  },
+  // Keep backward compat
+  isWorkoutDay: (date) => NKStorage.getDayType(date) !== 'rest',
+  toggleWorkoutDay: (date) => NKStorage.cycleDayType(date) !== 'rest'
 };
 
 window.NKStorage = NKStorage;

@@ -24,6 +24,19 @@
     .log-scroll { max-height:380px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding:4px 2px; }
     @media(max-width:900px) { .dashboard-grid{grid-template-columns:1fr} }
   </style>
+  <style>
+    .day-type-toggle { display:flex; gap:6px; }
+    .day-type-btn {
+      padding:8px 14px; border-radius:999px; border:1.5px solid var(--border-color);
+      background:var(--bg-card); color:var(--text-muted); font-size:0.82rem; font-weight:600;
+      cursor:pointer; transition:all 0.2s; white-space:nowrap;
+    }
+    .day-type-btn:hover { border-color:var(--accent-primary); color:var(--accent-primary); }
+    .day-type-btn.active { background:var(--accent-primary); color:white; border-color:var(--accent-primary); }
+    .day-type-btn[data-day="moderate"].active { background:#F59E0B; border-color:#F59E0B; }
+    .day-type-btn[data-day="full"].active { background:#10B981; border-color:#10B981; }
+    @media(max-width:500px) { .day-type-toggle { flex-wrap:wrap; } .day-type-btn { font-size:0.75rem; padding:6px 10px; } }
+  </style>
 </head>
 <body>
 <canvas id="bg-canvas"></canvas>
@@ -78,12 +91,18 @@
       <!-- Workout Toggle -->
       <div class="workout-toggle-card mb-24 anim-fade-in">
         <div class="workout-toggle-info">
-          <span class="workout-toggle-icon">🏋️</span>
+          <span class="workout-toggle-icon" id="day-type-icon">😴</span>
           <div>
             <div class="workout-toggle-title">Day Type</div>
             <div class="workout-toggle-sub">Affects your daily calorie goal</div>
           </div>
         </div>
+        <div class="day-type-toggle" id="day-type-toggle">
+          <button class="day-type-btn active" data-day="rest">😴 Rest</button>
+          <button class="day-type-btn" data-day="moderate">🏃 Moderate</button>
+          <button class="day-type-btn" data-day="full">🏋️ Full</button>
+        </div>
+      </div>
         <div class="toggle-group">
           <button class="toggle-btn" id="workout-toggle-btn" data-workout="false"><span id="workout-toggle-label">😴 Rest Day</span></button>
         </div>

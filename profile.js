@@ -8,8 +8,47 @@ const ProfilePage = (() => {
     name: 'Nikhil Kadari', dob: '2000-01-03',
     weight: 76, height: 160, goalWeight: 65,
     goalType: null,
-    dietaryPref: 'veg', caloriesRest: 1462, caloriesWorkout: 2034,
+    dietaryPref: 'veg', caloriesRest: 1462, caloriesModerate: 1800, caloriesWorkout: 2034, calAdjustment: 500,
     waterGoal: 3000, activityLevel: 'moderate'
+  };
+
+  // Auto-calculate 3 calorie targets from BMR + adjustment
+  const calcCaloriesFromBMR = (bmr, adjustment, goalType) => {
+    const sign = (goalType === 'gain') ? 1 : -1;
+    return {
+      rest:     Math.round(bmr * 1.2     + sign * adjustment),
+      moderate: Math.round(bmr * 1.55    + sign * adjustment),
+      full:     Math.round(bmr * 1.725   + sign * adjustment),
+    };
+  };
+
+  const applyAutoCalc = () => {
+    const weight = parseFloat(document.getElementById('p-weight')?.value);
+    const height = parseFloat(document.getElementById('p-height')?.value);
+    const dob    = document.getElementById('p-dob')?.value;
+    const adj    = parseFloat(document.getElementById('p-cal-adjustment')?.value) || 500;
+    const goalW  = parseFloat(document.getElementById('p-goal-weight')?.value);
+    const currW  = weight;
+
+    if (!weight || !height || !dob) return;
+
+    const age = calcAge(dob);
+    const bmr = calcBMR(weight, height, age);
+    const goalType = (currW && goalW) ? (currW < goalW ? 'gain' : 'lose') : 'lose';
+    const targets = calcCaloriesFromBMR(bmr, adj, goalType);
+
+    const restEl = document.getElementById('p-calories-rest');
+    const modEl  = document.getElementById('p-calories-moderate');
+    const fullEl = document.getElementById('p-calories-workout');
+    if (restEl) restEl.value = targets.rest;
+    if (modEl)  modEl.value  = targets.moderate;
+    if (fullEl) fullEl.value = targets.full;
+
+    // Update adjustment label
+    const adjLabel = document.getElementById('cal-adjust-label');
+    if (adjLabel) adjLabel.textContent = goalType === 'gain'
+      ? '📈 Daily Calorie Surplus'
+      : '📉 Daily Calorie Deficit';
   };
 
   const init = () => {
@@ -46,7 +85,7 @@ const ProfilePage = (() => {
       }
     }
     const profile = { ...DEFAULTS, ...NKStorage.getProfile() };
-    const fields = ['name','dob','weight','height','goal-weight','goal-type','dietary-pref','calories-rest','calories-workout','water-goal'];
+    const fields = ['name','dob','weight','height','goal-weight','goal-type','dietary-pref','calories-rest','calories-moderate','calories-workout','water-goal','cal-adjustment'];
     fields.forEach(f => {
       const el = document.getElementById('p-' + f);
       const key = f.replace(/-./g, m => m[1].toUpperCase());
@@ -59,6 +98,17 @@ const ProfilePage = (() => {
       else if (profile.weight > profile.goalWeight) goalTypeEl.value = 'lose';
       else goalTypeEl.value = 'maintain';
     }
+    // Load cal adjustment field manually since it uses different key format
+    const adjEl = document.getElementById('p-cal-adjustment');
+    if (adjEl && profile.calAdjustment) adjEl.value = profile.calAdjustment;
+    const modEl = document.getElementById('p-calories-moderate');
+    if (modEl && profile.caloriesModerate) modEl.value = profile.caloriesModerate;
+    // Update label
+    const goalTypeDetected = (profile.weight && profile.goalWeight)
+      ? (profile.weight < profile.goalWeight ? 'gain' : 'lose') : 'lose';
+    const adjLabel = document.getElementById('cal-adjust-label');
+    if (adjLabel) adjLabel.textContent = goalTypeDetected === 'gain'
+      ? '📈 Daily Calorie Surplus' : '📉 Daily Calorie Deficit';
     renderProfileDisplay(profile);
   };
 
@@ -122,6 +172,15 @@ const ProfilePage = (() => {
   };
 
   const bindSave = () => {
+    // Auto-recalc when weight/height/dob/adjustment changes
+    ['p-weight','p-height','p-dob','p-goal-weight','p-cal-adjustment'].forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', applyAutoCalc);
+    });
+    // Recalc button
+    const recalcBtn = document.getElementById('recalc-calories-btn');
+    if (recalcBtn) recalcBtn.addEventListener('click', applyAutoCalc);
+
     const btn = document.getElementById('save-profile-btn');
     if (!btn) return;
     btn.addEventListener('click', () => {
@@ -133,7 +192,9 @@ const ProfilePage = (() => {
         goalWeight: parseFloat(document.getElementById('p-goal-weight')?.value) || DEFAULTS.goalWeight,
         goalType: document.getElementById('p-goal-type')?.value || DEFAULTS.goalType,
         dietaryPref: document.getElementById('p-dietary-pref')?.value || DEFAULTS.dietaryPref,
-        caloriesRest: parseInt(document.getElementById('p-calories-rest')?.value) || DEFAULTS.caloriesRest,
+        caloriesRest:     parseInt(document.getElementById('p-calories-rest')?.value)     || DEFAULTS.caloriesRest,
+        caloriesModerate: parseInt(document.getElementById('p-calories-moderate')?.value) || DEFAULTS.caloriesModerate,
+        calAdjustment:    parseInt(document.getElementById('p-cal-adjustment')?.value)    || DEFAULTS.calAdjustment,
         caloriesWorkout: parseInt(document.getElementById('p-calories-workout')?.value) || DEFAULTS.caloriesWorkout,
         waterGoal: parseInt(document.getElementById('p-water-goal')?.value) || DEFAULTS.waterGoal,
       };
@@ -150,6 +211,17 @@ const ProfilePage = (() => {
       else if (profile.weight > profile.goalWeight) goalTypeEl.value = 'lose';
       else goalTypeEl.value = 'maintain';
     }
+    // Load cal adjustment field manually since it uses different key format
+    const adjEl = document.getElementById('p-cal-adjustment');
+    if (adjEl && profile.calAdjustment) adjEl.value = profile.calAdjustment;
+    const modEl = document.getElementById('p-calories-moderate');
+    if (modEl && profile.caloriesModerate) modEl.value = profile.caloriesModerate;
+    // Update label
+    const goalTypeDetected = (profile.weight && profile.goalWeight)
+      ? (profile.weight < profile.goalWeight ? 'gain' : 'lose') : 'lose';
+    const adjLabel = document.getElementById('cal-adjust-label');
+    if (adjLabel) adjLabel.textContent = goalTypeDetected === 'gain'
+      ? '📈 Daily Calorie Surplus' : '📉 Daily Calorie Deficit';
     renderProfileDisplay(profile);
       renderStats();
       Toast.success('✅ Profile saved successfully!');
@@ -227,6 +299,45 @@ const AdminPanel = (() => {
       if (result.success) { Toast.success('✅ User ' + displayName + ' removed.'); loadUsers(); }
       else Toast.error('❌ ' + result.error);
     };
+  };
+
+  // Auto-calculate 3 calorie targets from BMR + adjustment
+  const calcCaloriesFromBMR = (bmr, adjustment, goalType) => {
+    const sign = (goalType === 'gain') ? 1 : -1;
+    return {
+      rest:     Math.round(bmr * 1.2     + sign * adjustment),
+      moderate: Math.round(bmr * 1.55    + sign * adjustment),
+      full:     Math.round(bmr * 1.725   + sign * adjustment),
+    };
+  };
+
+  const applyAutoCalc = () => {
+    const weight = parseFloat(document.getElementById('p-weight')?.value);
+    const height = parseFloat(document.getElementById('p-height')?.value);
+    const dob    = document.getElementById('p-dob')?.value;
+    const adj    = parseFloat(document.getElementById('p-cal-adjustment')?.value) || 500;
+    const goalW  = parseFloat(document.getElementById('p-goal-weight')?.value);
+    const currW  = weight;
+
+    if (!weight || !height || !dob) return;
+
+    const age = calcAge(dob);
+    const bmr = calcBMR(weight, height, age);
+    const goalType = (currW && goalW) ? (currW < goalW ? 'gain' : 'lose') : 'lose';
+    const targets = calcCaloriesFromBMR(bmr, adj, goalType);
+
+    const restEl = document.getElementById('p-calories-rest');
+    const modEl  = document.getElementById('p-calories-moderate');
+    const fullEl = document.getElementById('p-calories-workout');
+    if (restEl) restEl.value = targets.rest;
+    if (modEl)  modEl.value  = targets.moderate;
+    if (fullEl) fullEl.value = targets.full;
+
+    // Update adjustment label
+    const adjLabel = document.getElementById('cal-adjust-label');
+    if (adjLabel) adjLabel.textContent = goalType === 'gain'
+      ? '📈 Daily Calorie Surplus'
+      : '📉 Daily Calorie Deficit';
   };
 
   const init = () => {

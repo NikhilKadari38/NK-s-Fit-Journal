@@ -157,18 +157,50 @@
           </div>
 
           <div class="divider"></div>
-          <h4 style="margin-bottom:16px">🎯 Calorie Goals</h4>
+          <h4 style="margin-bottom:8px">🎯 Calorie Goals</h4>
+          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:16px">
+            Based on your BMR, we auto-calculate your daily targets. Adjust the deficit/surplus below.
+          </p>
 
-          <div class="input-row">
-            <div class="form-group">
-              <label class="form-label">Rest Day (kcal)</label>
-              <input type="number" id="p-calories-rest" class="form-input" min="500" max="5000" placeholder="e.g. 1462"/>
+          <!-- Calorie Adjustment -->
+          <div class="card" style="background:var(--bg-secondary);border:none;padding:16px;margin-bottom:20px">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+              <div>
+                <div style="font-weight:600;font-size:0.9rem" id="cal-adjust-label">📉 Daily Calorie Deficit</div>
+                <div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px">How many kcal per day to cut/add from your TDEE</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <input type="number" id="p-cal-adjustment" class="form-input" min="0" max="1000" step="50"
+                  placeholder="e.g. 500" style="width:110px;text-align:center"/>
+                <span style="font-size:0.85rem;color:var(--text-muted)">kcal/day</span>
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Workout Day (kcal)</label>
-              <input type="number" id="p-calories-workout" class="form-input" min="500" max="6000" placeholder="e.g. 2034"/>
+            <div style="margin-top:12px;font-size:0.78rem;color:var(--text-muted)">
+              💡 Recommended: <strong>300–500 kcal</strong> deficit for fat loss · <strong>250–400 kcal</strong> surplus for muscle gain
             </div>
           </div>
+
+          <!-- Auto-calculated targets (read-only display + editable) -->
+          <div class="input-row" style="margin-bottom:12px">
+            <div class="form-group">
+              <label class="form-label">😴 Rest Day (kcal)</label>
+              <input type="number" id="p-calories-rest" class="form-input" min="500" max="5000" placeholder="Auto-calculated"/>
+              <div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px">BMR × 1.2 ± adjustment</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">🏃 Moderate Workout (kcal)</label>
+              <input type="number" id="p-calories-moderate" class="form-input" min="500" max="6000" placeholder="Auto-calculated"/>
+              <div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px">BMR × 1.55 ± adjustment</div>
+            </div>
+          </div>
+          <div class="form-group" style="max-width:50%">
+            <label class="form-label">🏋️ Full Workout (kcal)</label>
+            <input type="number" id="p-calories-workout" class="form-input" min="500" max="6000" placeholder="Auto-calculated"/>
+            <div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px">BMR × 1.725 ± adjustment</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="recalc-calories-btn" style="margin-bottom:16px">
+            🔄 Recalculate from BMR
+          </button>
 
           <div class="form-group">
             <label class="form-label">Daily Water Goal (ml)</label>

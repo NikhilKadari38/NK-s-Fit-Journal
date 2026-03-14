@@ -7,13 +7,13 @@ const Dashboard = (() => {
   // Fallback defaults — only used if user hasn't set up profile yet
   const DEFAULTS = {
     weight: 76, goalWeight: 65, goalType: 'lose',
-    caloriesRest: 1462, caloriesWorkout: 2034,
+    caloriesRest: 1462, caloriesModerate: 1800, caloriesWorkout: 2034,
     waterGoalMl: 3000,
     protein: 136, carbsRest: 138, carbsWorkout: 246,
     fatRest: 41, fatWorkout: 56
   };
 
-  let today, isWorkout, todayLog, waterMl;
+  let today, dayType, todayLog, waterMl;
 
   // Always read fresh from profile — never use stale hardcoded values
   const getP = () => {
@@ -25,8 +25,9 @@ const Dashboard = (() => {
       goalType: (p.weight && p.goalWeight)
         ? (p.weight < p.goalWeight ? 'gain' : p.weight > p.goalWeight ? 'lose' : 'maintain')
         : DEFAULTS.goalType,
-      caloriesRest:   p.caloriesRest   || DEFAULTS.caloriesRest,
-      caloriesWorkout:p.caloriesWorkout|| DEFAULTS.caloriesWorkout,
+      caloriesRest:     p.caloriesRest     || DEFAULTS.caloriesRest,
+      caloriesModerate: p.caloriesModerate || DEFAULTS.caloriesModerate,
+      caloriesWorkout:  p.caloriesWorkout  || DEFAULTS.caloriesWorkout,
       waterGoal:      p.waterGoal      || DEFAULTS.waterGoalMl,
       // Macros — derived from calories if not set, or use defaults
       protein:        DEFAULTS.protein,
@@ -40,7 +41,7 @@ const Dashboard = (() => {
   const init = () => {
     today = Utils.today();
     todayLog = NKStorage.getFoodLog(today);
-    isWorkout = NKStorage.isWorkoutDay(today);
+    dayType = NKStorage.getDayType(today);
     waterMl = NKStorage.getWater(today).ml || 0;
 
     renderDate();
@@ -59,22 +60,35 @@ const Dashboard = (() => {
     if (dayEl) dayEl.textContent = Utils.getDayOfWeek(today);
   };
 
+  const getDayCalories = (p) => {
+    if (dayType === 'full')     return p.caloriesWorkout;
+    if (dayType === 'moderate') return p.caloriesModerate;
+    return p.caloriesRest;
+  };
+
   const renderWorkoutToggle = () => {
     const p = getP();
-    const btn = document.getElementById('workout-toggle-btn');
-    const label = document.getElementById('workout-toggle-label');
+    // Update active state on pill buttons
+    document.querySelectorAll('.day-type-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.day === dayType);
+    });
+    // Update icon
+    const icon = document.getElementById('day-type-icon');
+    if (icon) {
+      icon.textContent = dayType === 'full' ? '🏋️' : dayType === 'moderate' ? '🏃' : '😴';
+    }
+    // Update calorie goal label
     const calLabel = document.getElementById('cal-goal-label');
-    if (!btn) return;
-    btn.className = 'toggle-btn ' + (isWorkout ? 'active' : '');
-    if (label) label.textContent = isWorkout ? '🏋️ Workout Day' : '😴 Rest Day';
-    if (calLabel) calLabel.textContent = isWorkout
-      ? p.caloriesWorkout.toLocaleString()
-      : p.caloriesRest.toLocaleString();
-    btn.onclick = () => {
-      isWorkout = NKStorage.toggleWorkoutDay(today);
-      renderWorkoutToggle();
-      renderSummary();
-    };
+    if (calLabel) calLabel.textContent = getDayCalories(p).toLocaleString();
+
+    // Bind click on each pill button
+    document.querySelectorAll('.day-type-btn').forEach(function(btn) {
+      btn.onclick = function() {
+        dayType = NKStorage.setDayType(today, btn.dataset.day);
+        renderWorkoutToggle();
+        renderSummary();
+      };
+    });
   };
 
   const getTotals = () => {
@@ -90,7 +104,7 @@ const Dashboard = (() => {
   const renderSummary = () => {
     const p = getP();
     const totals = getTotals();
-    const goal = isWorkout ? p.caloriesWorkout : p.caloriesRest;
+    const goal = getDayCalories(p);
     const eaten = Utils.round1(totals.calories);
     const diff = Math.round(Math.abs(goal - totals.calories));
     const over = totals.calories > goal;
@@ -139,8 +153,8 @@ const Dashboard = (() => {
     // Macro bars — use profile macros
     const macroGoals = {
       protein: p.protein,
-      carbs:   isWorkout ? p.carbsWorkout : p.carbsRest,
-      fat:     isWorkout ? p.fatWorkout   : p.fatRest
+      carbs:   dayType === 'rest' ? p.carbsRest : p.carbsWorkout,
+      fat:     dayType === 'rest' ? p.fatRest   : p.fatWorkout
     };
     ['protein', 'carbs', 'fat'].forEach(function(m) {
       const bar = document.getElementById('bar-' + m);
