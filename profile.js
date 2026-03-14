@@ -50,17 +50,28 @@ const ProfilePage = (() => {
       ? '📈 Daily Calorie Surplus'
       : '📉 Daily Calorie Deficit';
 
-    // Show macro preview
-    const macros = FitnessCalc.calcMacros(targets.rest, goalType);
+    // Show macro preview for all 3 day types
     const macroPreviewEl = document.getElementById('macro-preview');
-    if (macroPreviewEl) {
+    if (macroPreviewEl && window.FitnessCalc) {
       const split = goalType === 'gain' ? '30/45/25' : goalType === 'lose' ? '40/30/30' : '30/40/30';
+      const mr = FitnessCalc.calcMacros(targets.rest,     goalType);
+      const mm = FitnessCalc.calcMacros(targets.moderate, goalType);
+      const mf = FitnessCalc.calcMacros(targets.full,     goalType);
       macroPreviewEl.innerHTML =
-        '<div style="font-size:0.78rem;color:var(--text-muted);margin-top:8px">'
-        + '📊 Rest day macros (' + split + '% P/C/F): '
-        + '<span style="color:#3B82F6;font-weight:600">' + macros.protein + 'g protein</span> · '
-        + '<span style="color:#A78BFA;font-weight:600">' + macros.carbs + 'g carbs</span> · '
-        + '<span style="color:#FB923C;font-weight:600">' + macros.fat + 'g fat</span>'
+        '<div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;font-size:0.78rem">'
+        + '<div style="font-weight:600;color:var(--text-muted);margin-bottom:2px">📊 Macro targets (' + split + '% P/C/F)</div>'
+        + '<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg-card);border-radius:8px">'
+        +   '<span>😴 Rest</span>'
+        +   '<span><span style="color:#3B82F6;font-weight:600">' + mr.protein + 'g P</span> · <span style="color:#A78BFA;font-weight:600">' + mr.carbs + 'g C</span> · <span style="color:#FB923C;font-weight:600">' + mr.fat + 'g F</span></span>'
+        + '</div>'
+        + '<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg-card);border-radius:8px">'
+        +   '<span>🏃 Moderate</span>'
+        +   '<span><span style="color:#3B82F6;font-weight:600">' + mm.protein + 'g P</span> · <span style="color:#A78BFA;font-weight:600">' + mm.carbs + 'g C</span> · <span style="color:#FB923C;font-weight:600">' + mm.fat + 'g F</span></span>'
+        + '</div>'
+        + '<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg-card);border-radius:8px">'
+        +   '<span>🏋️ Full Workout</span>'
+        +   '<span><span style="color:#3B82F6;font-weight:600">' + mf.protein + 'g P</span> · <span style="color:#A78BFA;font-weight:600">' + mf.carbs + 'g C</span> · <span style="color:#FB923C;font-weight:600">' + mf.fat + 'g F</span></span>'
+        + '</div>'
         + '</div>';
     }
   };
@@ -171,8 +182,9 @@ const ProfilePage = (() => {
         goalType === 'gain' ? toGoal + ' kg to gain' :
         '⚖️ Maintaining',
       'display-diet': profile.dietaryPref === 'veg' ? '🌱 Vegetarian' : profile.dietaryPref === 'nonveg' ? '🍗 Non-Vegetarian' : '🌿 Vegan',
-      'display-cal-rest': profile.caloriesRest + ' kcal',
-      'display-cal-workout': profile.caloriesWorkout + ' kcal',
+      'display-cal-rest':     (profile.caloriesRest     || '--') + ' kcal',
+      'display-cal-moderate': (profile.caloriesModerate || '--') + ' kcal',
+      'display-cal-workout':  (profile.caloriesWorkout  || '--') + ' kcal',
       'display-water': (profile.waterGoal / 1000).toFixed(1) + ' L/day',
     };
 
@@ -369,17 +381,28 @@ const AdminPanel = (() => {
       ? '📈 Daily Calorie Surplus'
       : '📉 Daily Calorie Deficit';
 
-    // Show macro preview
-    const macros = FitnessCalc.calcMacros(targets.rest, goalType);
+    // Show macro preview for all 3 day types
     const macroPreviewEl = document.getElementById('macro-preview');
-    if (macroPreviewEl) {
+    if (macroPreviewEl && window.FitnessCalc) {
       const split = goalType === 'gain' ? '30/45/25' : goalType === 'lose' ? '40/30/30' : '30/40/30';
+      const mr = FitnessCalc.calcMacros(targets.rest,     goalType);
+      const mm = FitnessCalc.calcMacros(targets.moderate, goalType);
+      const mf = FitnessCalc.calcMacros(targets.full,     goalType);
       macroPreviewEl.innerHTML =
-        '<div style="font-size:0.78rem;color:var(--text-muted);margin-top:8px">'
-        + '📊 Rest day macros (' + split + '% P/C/F): '
-        + '<span style="color:#3B82F6;font-weight:600">' + macros.protein + 'g protein</span> · '
-        + '<span style="color:#A78BFA;font-weight:600">' + macros.carbs + 'g carbs</span> · '
-        + '<span style="color:#FB923C;font-weight:600">' + macros.fat + 'g fat</span>'
+        '<div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;font-size:0.78rem">'
+        + '<div style="font-weight:600;color:var(--text-muted);margin-bottom:2px">📊 Macro targets (' + split + '% P/C/F)</div>'
+        + '<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg-card);border-radius:8px">'
+        +   '<span>😴 Rest</span>'
+        +   '<span><span style="color:#3B82F6;font-weight:600">' + mr.protein + 'g P</span> · <span style="color:#A78BFA;font-weight:600">' + mr.carbs + 'g C</span> · <span style="color:#FB923C;font-weight:600">' + mr.fat + 'g F</span></span>'
+        + '</div>'
+        + '<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg-card);border-radius:8px">'
+        +   '<span>🏃 Moderate</span>'
+        +   '<span><span style="color:#3B82F6;font-weight:600">' + mm.protein + 'g P</span> · <span style="color:#A78BFA;font-weight:600">' + mm.carbs + 'g C</span> · <span style="color:#FB923C;font-weight:600">' + mm.fat + 'g F</span></span>'
+        + '</div>'
+        + '<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg-card);border-radius:8px">'
+        +   '<span>🏋️ Full Workout</span>'
+        +   '<span><span style="color:#3B82F6;font-weight:600">' + mf.protein + 'g P</span> · <span style="color:#A78BFA;font-weight:600">' + mf.carbs + 'g C</span> · <span style="color:#FB923C;font-weight:600">' + mf.fat + 'g F</span></span>'
+        + '</div>'
         + '</div>';
     }
   };

@@ -28,12 +28,6 @@ const Dashboard = (() => {
       caloriesModerate: p.caloriesModerate || DEFAULTS.caloriesModerate,
       caloriesWorkout:  p.caloriesWorkout  || DEFAULTS.caloriesWorkout,
       waterGoal:      p.waterGoal      || DEFAULTS.waterGoalMl,
-      // Macros — derived from calories if not set, or use defaults
-      protein:        DEFAULTS.protein,
-      carbsRest:      DEFAULTS.carbsRest,
-      carbsWorkout:   DEFAULTS.carbsWorkout,
-      fatRest:        DEFAULTS.fatRest,
-      fatWorkout:     DEFAULTS.fatWorkout,
     };
   };
 
@@ -163,8 +157,10 @@ const Dashboard = (() => {
     const calGoalStat = document.getElementById('cal-goal-stat');
     if (calGoalStat) calGoalStat.innerHTML = goal.toLocaleString() + '<span class="stat-unit">kcal</span>';
 
-    // Macro bars — always calculate from calorie goal + goal type
-    const goalType = p.goalType || 'lose';
+    // Macro bars — always calculate fresh from calorie goal + goal type
+    const goalType = (p.weight && p.goalWeight)
+      ? (p.weight < p.goalWeight ? 'gain' : p.weight > p.goalWeight ? 'lose' : 'maintain')
+      : 'lose';
     const macroGoals = calcMacros(goal, goalType);
     ['protein', 'carbs', 'fat'].forEach(function(m) {
       const bar = document.getElementById('bar-' + m);
@@ -183,7 +179,9 @@ const Dashboard = (() => {
 
   const renderGoalProgress = () => {
     const p = getP();
-    const goalType = p.goalType;
+    const goalType = (p.weight && p.goalWeight)
+      ? (p.weight < p.goalWeight ? 'gain' : p.weight > p.goalWeight ? 'lose' : 'maintain')
+      : 'lose';
 
     // Get latest logged weight
     const allWeights = NKStorage.getAllWeights();
