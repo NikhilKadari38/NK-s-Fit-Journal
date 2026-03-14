@@ -53,7 +53,7 @@ const ProfilePage = (() => {
     // Show macro preview for all 3 day types
     const macroPreviewEl = document.getElementById('macro-preview');
     if (macroPreviewEl && window.FitnessCalc) {
-      const split = goalType === 'gain' ? '30/45/25' : goalType === 'lose' ? '40/30/30' : '30/40/30';
+      const split = goalType === 'gain' ? '25/25/50' : goalType === 'lose' ? '35/25/40' : '30/25/45';
       const mr = FitnessCalc.calcMacros(targets.rest,     goalType);
       const mm = FitnessCalc.calcMacros(targets.moderate, goalType);
       const mf = FitnessCalc.calcMacros(targets.full,     goalType);
@@ -384,7 +384,7 @@ const AdminPanel = (() => {
     // Show macro preview for all 3 day types
     const macroPreviewEl = document.getElementById('macro-preview');
     if (macroPreviewEl && window.FitnessCalc) {
-      const split = goalType === 'gain' ? '30/45/25' : goalType === 'lose' ? '40/30/30' : '30/40/30';
+      const split = goalType === 'gain' ? '25/25/50' : goalType === 'lose' ? '35/25/40' : '30/25/45';
       const mr = FitnessCalc.calcMacros(targets.rest,     goalType);
       const mm = FitnessCalc.calcMacros(targets.moderate, goalType);
       const mf = FitnessCalc.calcMacros(targets.full,     goalType);
@@ -443,12 +443,13 @@ window.FitnessCalc = {
   // Lose:     40% protein, 30% carbs, 30% fat  (preserve muscle while cutting)
   // Gain:     30% protein, 45% carbs, 25% fat  (fuel muscle growth)
   // Maintain: 30% protein, 40% carbs, 30% fat  (balanced)
+  // Macro splits: lose = 35/25/40 (P/F/C), gain = 25/25/50 (P/F/C), maintain = 30/25/45
   calcMacros: (calories, goalType) => {
     const splits = goalType === 'gain'
-      ? { protein: 0.30, carbs: 0.45, fat: 0.25 }
+      ? { protein: 0.25, fat: 0.25, carbs: 0.50 }
       : goalType === 'lose'
-      ? { protein: 0.40, carbs: 0.30, fat: 0.30 }
-      : { protein: 0.30, carbs: 0.40, fat: 0.30 };
+      ? { protein: 0.35, fat: 0.25, carbs: 0.40 }
+      : { protein: 0.30, fat: 0.25, carbs: 0.45 };
     return {
       protein: Math.round((calories * splits.protein) / 4),
       carbs:   Math.round((calories * splits.carbs)   / 4),

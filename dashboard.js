@@ -32,12 +32,13 @@ const Dashboard = (() => {
   };
 
   // Calculate macros from calories + goal type — no dependency on profile.js
+  // Macro splits: lose = 35/25/40 (P/F/C), gain = 25/25/50 (P/F/C), maintain = 30/25/45
   const calcMacros = (calories, goalType) => {
     const splits = goalType === 'gain'
-      ? { protein: 0.30, carbs: 0.45, fat: 0.25 }
+      ? { protein: 0.25, fat: 0.25, carbs: 0.50 }
       : goalType === 'lose'
-      ? { protein: 0.40, carbs: 0.30, fat: 0.30 }
-      : { protein: 0.30, carbs: 0.40, fat: 0.30 };
+      ? { protein: 0.35, fat: 0.25, carbs: 0.40 }
+      : { protein: 0.30, fat: 0.25, carbs: 0.45 };
     return {
       protein: Math.round((calories * splits.protein) / 4),
       carbs:   Math.round((calories * splits.carbs)   / 4),
