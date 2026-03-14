@@ -246,7 +246,7 @@ const ProfilePage = (() => {
       if (profile.height < 100 || profile.height > 250) { Toast.error('Enter a valid height (cm)'); return; }
 
       NKStorage.setProfile(profile);
-      // Always sync the dropdown to match the actual weights
+    // Always sync the dropdown to match the actual weights
     const goalTypeEl = document.getElementById('p-goal-type');
     if (goalTypeEl) {
       if (profile.weight < profile.goalWeight) goalTypeEl.value = 'gain';

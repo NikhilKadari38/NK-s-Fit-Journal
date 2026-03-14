@@ -5,7 +5,11 @@
 
 // ── Utils ──
 const Utils = {
-  today: () => new Date().toISOString().split('T')[0],
+  today: () => {
+    // Always use browser's local date — works correctly for any timezone worldwide
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  },
   formatDate: (dateStr) => {
     const d = new Date(dateStr + 'T00:00:00');
     return d.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
