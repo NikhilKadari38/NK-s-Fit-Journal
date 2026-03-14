@@ -6,11 +6,11 @@
 const Dashboard = (() => {
   // Fallback defaults — only used if user hasn't set up profile yet
   const DEFAULTS = {
-    weight: 76, goalWeight: 65, goalType: 'lose',
-    caloriesRest: 1462, caloriesModerate: 1800, caloriesWorkout: 2034,
+    weight: 70, goalWeight: 65, goalType: 'lose',
+    caloriesRest: 1800, caloriesModerate: 2200, caloriesWorkout: 2500,
     waterGoalMl: 3000,
-    protein: 136, carbsRest: 138, carbsWorkout: 246,
-    fatRest: 41, fatWorkout: 56
+    protein: 120, carbsRest: 150, carbsWorkout: 220,
+    fatRest: 50, fatWorkout: 60
   };
 
   let today, dayType, todayLog, waterMl;

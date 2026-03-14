@@ -5,10 +5,10 @@
 
 const ProfilePage = (() => {
   const DEFAULTS = {
-    name: 'Nikhil Kadari', dob: '2000-01-03',
-    weight: 76, height: 160, goalWeight: 65,
+    name: '', dob: '',
+    weight: null, height: null, goalWeight: null,
     goalType: null,
-    dietaryPref: 'veg', caloriesRest: 1462, caloriesModerate: 1800, caloriesWorkout: 2034, calAdjustment: 500,
+    dietaryPref: 'veg', caloriesRest: null, caloriesModerate: null, caloriesWorkout: null, calAdjustment: 500,
     waterGoal: 3000, activityLevel: 'moderate'
   };
 
@@ -84,7 +84,23 @@ const ProfilePage = (() => {
         avatarEl.textContent = username.substring(0, 2).toUpperCase();
       }
     }
-    const profile = { ...DEFAULTS, ...NKStorage.getProfile() };
+    const saved = NKStorage.getProfile() || {};
+    // Only apply DEFAULTS for non-personal fields — never pre-fill weight/height/name for new users
+    const profile = {
+      name:             saved.name             || '',
+      dob:              saved.dob              || '',
+      weight:           saved.weight           || null,
+      height:           saved.height           || null,
+      goalWeight:       saved.goalWeight       || null,
+      goalType:         saved.goalType         || null,
+      dietaryPref:      saved.dietaryPref      || 'veg',
+      caloriesRest:     saved.caloriesRest     || null,
+      caloriesModerate: saved.caloriesModerate || null,
+      caloriesWorkout:  saved.caloriesWorkout  || null,
+      calAdjustment:    saved.calAdjustment    || 500,
+      waterGoal:        saved.waterGoal        || 3000,
+      activityLevel:    saved.activityLevel    || 'moderate',
+    };
     const fields = ['name','dob','weight','height','goal-weight','goal-type','dietary-pref','calories-rest','calories-moderate','calories-workout','water-goal','cal-adjustment'];
     fields.forEach(f => {
       const el = document.getElementById('p-' + f);
@@ -185,17 +201,17 @@ const ProfilePage = (() => {
     if (!btn) return;
     btn.addEventListener('click', () => {
       const profile = {
-        name: document.getElementById('p-name')?.value?.trim() || DEFAULTS.name,
-        dob: document.getElementById('p-dob')?.value || DEFAULTS.dob,
-        weight: parseFloat(document.getElementById('p-weight')?.value) || DEFAULTS.weight,
-        height: parseFloat(document.getElementById('p-height')?.value) || DEFAULTS.height,
-        goalWeight: parseFloat(document.getElementById('p-goal-weight')?.value) || DEFAULTS.goalWeight,
+        name: document.getElementById('p-name')?.value?.trim() || '',
+        dob: document.getElementById('p-dob')?.value || '',
+        weight: parseFloat(document.getElementById('p-weight')?.value) || null,
+        height: parseFloat(document.getElementById('p-height')?.value) || null,
+        goalWeight: parseFloat(document.getElementById('p-goal-weight')?.value) || null,
         goalType: document.getElementById('p-goal-type')?.value || DEFAULTS.goalType,
         dietaryPref: document.getElementById('p-dietary-pref')?.value || DEFAULTS.dietaryPref,
-        caloriesRest:     parseInt(document.getElementById('p-calories-rest')?.value)     || DEFAULTS.caloriesRest,
-        caloriesModerate: parseInt(document.getElementById('p-calories-moderate')?.value) || DEFAULTS.caloriesModerate,
+        caloriesRest:     parseInt(document.getElementById('p-calories-rest')?.value)     || null,
+        caloriesModerate: parseInt(document.getElementById('p-calories-moderate')?.value) || null,
         calAdjustment:    parseInt(document.getElementById('p-cal-adjustment')?.value)    || DEFAULTS.calAdjustment,
-        caloriesWorkout: parseInt(document.getElementById('p-calories-workout')?.value) || DEFAULTS.caloriesWorkout,
+        caloriesWorkout: parseInt(document.getElementById('p-calories-workout')?.value) || null,
         waterGoal: parseInt(document.getElementById('p-water-goal')?.value) || DEFAULTS.waterGoal,
       };
 
