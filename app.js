@@ -290,13 +290,18 @@ const SideFigures = {
        : profile.weight > profile.goalWeight ? 'lose' : 'maintain')
       : 'lose';
 
-    // Emojis: lean body vs muscled body
-    // Gain:  lean (left) → muscled (right) — showing the goal ahead
-    // Lose:  muscled (left) → lean (right) — showing the goal ahead
-    // Maintain: both balanced
+    // Check if goal is reached (within 0.5kg tolerance)
+    const goalReached = profile.weight && profile.goalWeight
+      && Math.abs(profile.weight - profile.goalWeight) <= 0.5;
+
     let leftEmoji, rightEmoji, leftLabel, rightLabel;
 
-    if (goalType === 'gain') {
+    if (goalReached) {
+      // 🎉 Goal reached — same emoji on both sides!
+      const goalEmoji = goalType === 'gain' ? '🏋️' : goalType === 'lose' ? '🏃' : '💪';
+      leftEmoji  = goalEmoji; leftLabel  = 'You';
+      rightEmoji = goalEmoji; rightLabel = 'Goal ✅';
+    } else if (goalType === 'gain') {
       // Thin/weak (Now) → Bulk muscled (Goal)
       leftEmoji  = '🧎';  leftLabel  = 'Now';
       rightEmoji = '🏋️'; rightLabel = 'Goal';
@@ -329,6 +334,12 @@ const SideFigures = {
     setTimeout(() => {
       left.classList.add('visible');
       right.classList.add('visible');
+      // Extra celebration bounce if goal reached
+      if (goalReached) {
+        left.style.animation = 'figure-float 1.5s ease-in-out infinite';
+        right.style.animation = 'figure-float 1.5s ease-in-out infinite';
+        right.style.animationDelay = '0.75s';
+      }
     }, 600);
   }
 };
