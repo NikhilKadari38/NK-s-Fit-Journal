@@ -81,7 +81,27 @@ const Auth = (() => {
       window.location.href = 'login.html';
       return null;
     }
+    // Async verify user still exists in Firebase (handles deleted accounts)
+    verifyUserExists(user);
     return user;
+  };
+
+  // ── Verify user still exists in Firebase — force logout if deleted ──
+  const verifyUserExists = async (username) => {
+    try {
+      const doc = await firebase.firestore()
+        .collection('auth').doc('users')
+        .collection('accounts').doc(username.toLowerCase())
+        .get();
+      if (!doc.exists) {
+        // User was deleted by admin — clear session and redirect
+        clearSession();
+        window.location.href = 'login.html?reason=deleted';
+      }
+    } catch (e) {
+      // Network error — don't force logout, fail silently
+      console.warn('Could not verify user session:', e);
+    }
   };
 
   // ── Register new user ──
